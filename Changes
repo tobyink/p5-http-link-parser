@@ -1,0 +1,6 @@
+Revision history for Perl extension HTTP::Link::Parser.
+
+0.01  Fri Oct  9 13:23:07 2009
+	- original version; created by h2xs 1.23 with options
+		-X HTTP::Link::Parser
+
