@@ -1,6 +1,6 @@
 package HTTP::Link::Parser;
 
-use 5.010000;
+use 5.006000;
 use strict;
 no warnings;
 
@@ -9,14 +9,15 @@ use AutoLoader qw(AUTOLOAD);
 
 our @ISA = qw(Exporter);
 our %EXPORT_TAGS = (
-	'all' => [ qw(parse_links_to_list parse_links_to_rdf relationship_uri) ],
-	'standard' => [ qw(parse_links_to_list parse_links_to_rdf) ]
+	'all' => [ qw(parse_links_to_list parse_links_to_rdfjson parse_links_into_model relationship_uri) ],
+	'standard' => [ qw(parse_links_to_list parse_links_to_rdfjson parse_links_into_model) ]
 	);
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT    = ( );
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
+use RDF::Trine;
 use URI;
 use URI::Escape;
 
@@ -111,7 +112,59 @@ sub parse_links_to_list
 	return $rv;
 }
 
-sub parse_links_to_rdf
+sub parse_links_into_model
+{
+	my $response =  shift;
+	my $model    =  shift
+	             || RDF::Trine::Model->new( RDF::Trine::Store::DBI->temporary_store );
+	
+	my $json = parse_links_to_rdfjson($response);
+
+	foreach my $s (keys %$json)
+	{
+		my ($ts, $tp, $to);
+		
+		if ($s =~ /^_:(.*)$/)
+		{
+			$ts = RDF::Trine::Node::Blank->new($1);
+		}
+		else
+		{
+			$ts = RDF::Trine::Node::Resource->new($s);
+		}
+		
+		foreach my $p (keys %{ $json->{$s} })
+		{
+			$tp = RDF::Trine::Node::Resource->new($p);
+			
+			foreach my $o (@{ $json->{$s}->{$p} })
+			{
+				if ($o->{'type'} eq 'bnode')
+				{
+					$to = RDF::Trine::Node::Blank->new((substr $o->{'value'}, 2));
+				}
+				elsif ($o->{'type'} eq 'uri')
+				{
+					$to = RDF::Trine::Node::Resource->new($o->{'value'});
+				}
+				else
+				{
+					$to = RDF::Trine::Node::Literal->new($o->{'value'}, $o->{'lang'}, $o->{'datatype'});
+				}
+				
+				if ($ts && $tp && $to)
+				{
+					my $st = RDF::Trine::Statement->new($ts, $tp, $to);
+					$model->add_statement($st);
+				}
+			}
+		}
+	}
+	
+	return $model;
+}
+
+sub parse_links_to_rdfjson
 {
 	my $response = shift;
 	my $base     = URI->new($response->base);
@@ -188,6 +241,10 @@ __END__
 
 HTTP::Link::Parser - Perl extension for parsing HTTP Link headers
 
+=head1 VERSION
+
+0.02
+
 =head1 SYNOPSIS
 
   use HTTP::Link::Parser qw(:standard);
@@ -222,6 +279,18 @@ described in the forthcoming IETF specification.
 
 =over 8
 
+=item $model = parse_links_into_model($response, [$existing_model]);
+
+C<$model> is an RDF::Trine::Model. Dublin Core is used to encode
+'hreflang', 'title' and 'type' link parameters.
+
+=item $rdf = parse_links_to_rdfjson($response);
+
+C<$rdf> is a hashref with a structure inspired by the RDF/JSON
+specification. Short forms of relationships are returned in long
+form (as predicate URIs). Dublin Core is used to encode 'hreflang',
+'title' and 'type' link parameters.
+
 =item $list = parse_links_to_list($response);
 
 C<$list> is an arrayref of hashrefs. Each hashref contains keys
@@ -233,13 +302,6 @@ relationships. If the Link used the short form of a registered
 relationship, then the short form is present on this list. Short
 forms can be converted to long forms (URIs) using the
 C<HTTP::Link::Parser::relationship_uri()> function.
-
-=item $rdf = parse_links_to_rdf($response);
-
-C<$rdf> is a hashref with a structure inspired by the RDF/JSON
-specification. Short forms of relationships are returned in long
-form (as predicate URIs). Dublin Core is used to encode 'hreflang',
-'title' and 'type' link parameters.
 
 =item $long = HTTP::Link::Parser::relationship_uri($short);
 
@@ -259,6 +321,8 @@ link parameter.
 =head1 SEE ALSO
 
 http://www.mnot.net/drafts/draft-nottingham-http-link-header-07.txt
+
+L<RDF::Trine>
 
 http://n2.talis.com/wiki/RDF_JSON_Specification
 

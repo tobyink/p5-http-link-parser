@@ -1,18 +1,7 @@
-# Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl HTTP-Link-Parser.t'
-
-#########################
-
-# change 'tests => 1' to 'tests => last_test_to_print';
-
-use Test::More tests => 12;
+use Test::More tests => 10;
 BEGIN { use_ok('HTTP::Link::Parser') };
 
-#########################
-
-# Insert your test code below, the Test::More module is use()ed here so read
-# its man page ( perldoc Test::More ) for help writing this test script.
-
+# Create a test response to parse.
 use HTTP::Response;
 my $response = HTTP::Response->new( 200 );
 $response->push_header("Base" => "http://example.org/subject");
@@ -22,52 +11,67 @@ $response->push_header("Link" => "<nextdoc>; rel=\"next\"; title=\"relative\"; t
 $response->push_header("Link" => "<subject>; rel=\"prev\"; title=\"subject\"; anchor=\"nextdoc\"");
 $response->push_header("Link" => "<author>; rev=\"made\"; title=\"author\";");
 
-my $rdf = HTTP::Link::Parser::parse_links_to_rdf($response);
+my $M = HTTP::Link::Parser::parse_links_into_model($response);
 
-ok(defined $rdf->{'http://example.net/absolute'} , "absolute targets");
-ok(defined $rdf->{'http://example.org/relative'} , "relative targets");
-
-is(
-	$rdf->{'http://example.org/subject'}->{'http://example.net/rel/one'}->['0']->{'value'} ,
-	"http://example.net/absolute",
+ok($M->count_statements(
+		RDF::Trine::Node::Resource->new('http://example.org/subject'),
+		RDF::Trine::Node::Resource->new('http://example.net/rel/one'),
+		RDF::Trine::Node::Resource->new('http://example.net/absolute'),
+		),
 	"absolute relationships");
 
-is(
-	$rdf->{'http://example.org/subject'}->{'http://www.iana.org/assignments/relation/three'}->['0']->{'value'} ,
-	"http://example.org/relative",
+ok($M->count_statements(
+		RDF::Trine::Node::Resource->new('http://example.org/subject'),
+		RDF::Trine::Node::Resource->new('http://www.iana.org/assignments/relation/three'),
+		RDF::Trine::Node::Resource->new('http://example.org/relative'),
+		),
 	"relative relationships");
 
-is(
-	$rdf->{'http://example.org/subject'}->{'http://example.net/rel/two'}->['0']->{'value'} ,
-	"http://example.net/absolute",
+ok($M->count_statements(
+		RDF::Trine::Node::Resource->new('http://example.org/subject'),
+		RDF::Trine::Node::Resource->new('http://example.net/rel/two'),
+		RDF::Trine::Node::Resource->new('http://example.net/absolute'),
+		),
 	"space-separated relationships");
 
-is(
-	$rdf->{'http://example.org/nextdoc'}->{'http://www.iana.org/assignments/relation/prev'}->['0']->{'value'} ,
-	"http://example.org/subject",
+ok($M->count_statements(
+		RDF::Trine::Node::Resource->new('http://example.org/nextdoc'),
+		RDF::Trine::Node::Resource->new('http://www.iana.org/assignments/relation/prev'),
+		RDF::Trine::Node::Resource->new('http://example.org/subject'),
+		),
 	"the 'anchor' link parameter");
 
-is(
-	$rdf->{'http://example.org/author'}->{'http://www.iana.org/assignments/relation/made'}->['0']->{'value'} ,
-	"http://example.org/subject",
+ok($M->count_statements(
+		RDF::Trine::Node::Resource->new('http://example.org/author'),
+		RDF::Trine::Node::Resource->new('http://www.iana.org/assignments/relation/made'),
+		RDF::Trine::Node::Resource->new('http://example.org/subject'),
+		),
 	"the 'rev' link parameter");
 
-is(
-	$rdf->{'http://example.org/author'}->{'http://purl.org/dc/terms/title'}->['0']->{'value'} ,
-	"author",
+ok($M->count_statements(
+		RDF::Trine::Node::Resource->new('http://example.org/author'),
+		RDF::Trine::Node::Resource->new('http://purl.org/dc/terms/title'),
+		RDF::Trine::Node::Literal->new('author'),
+		),
 	"the 'title' link parameter");
-	
-is(
-	$rdf->{'http://example.org/subject'}->{'http://purl.org/dc/terms/title'}->['0']->{'value'} ,
-	"subject",
+
+ok($M->count_statements(
+		RDF::Trine::Node::Resource->new('http://example.org/subject'),
+		RDF::Trine::Node::Resource->new('http://purl.org/dc/terms/title'),
+		RDF::Trine::Node::Literal->new('subject'),
+		),
 	"the 'title' link parameter, with 'anchor'");
 
-is(
-	$rdf->{'http://example.org/nextdoc'}->{'http://purl.org/dc/terms/language'}->['0']->{'value'} ,
-	"http://www.lingvoj.org/lingvo/en",
+ok($M->count_statements(
+		RDF::Trine::Node::Resource->new('http://example.org/nextdoc'),
+		RDF::Trine::Node::Resource->new('http://purl.org/dc/terms/language'),
+		RDF::Trine::Node::Resource->new('http://www.lingvoj.org/lingvo/en'),
+		),
 	"the 'hreflang' link parameter");
 
-is(
-	$rdf->{'http://example.org/nextdoc'}->{'http://purl.org/dc/terms/format'}->['0']->{'value'} ,
-	"http://www.iana.org/assignments/media-types/text/html",
+ok($M->count_statements(
+		RDF::Trine::Node::Resource->new('http://example.org/nextdoc'),
+		RDF::Trine::Node::Resource->new('http://purl.org/dc/terms/format'),
+		RDF::Trine::Node::Resource->new('http://www.iana.org/assignments/media-types/text/html'),
+		),
 	"the 'type' link parameter");
