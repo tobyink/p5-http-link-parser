@@ -253,23 +253,25 @@ HTTP::Link::Parser - Perl extension for parsing HTTP Link headers
   my $ua = LWP::UserAgent->new;
   my $response = $ua->get("http://example.com/foo");
   
-  # Link headers can be parsed into an arrayref of hashrefs.
-  my $links = parse_links_to_list($response);
-  foreach my $link (@$links)
+  # Parse link headers into an RDF::Trine::Model.
+  my $model = parse_links_into_model($response);
+
+  # Find data about <http://example.com/foo>.
+  my $iterator = $model->get_statements(
+    RDF::Trine::Node::Resource->new('http://example.com/foo'),
+    undef,
+    undef);
+
+  while ($statement = $iterator->next)
   {
+     # Skip data where the value is not a resource (i.e. link)
+     next unless $statement->object->is_resource;
+
      printf("Link to <%s> with rel=\"%s\".\n",
-        $link->{URI},
-        join ' ', @{ $link->{'rel'} }
-        );
+        $statement->object->uri,
+        $statement->predicate->uri);
   }
   
-  # Or into a subject -> predicate -> arrayref-of-objects structure
-  my $rdf = parse_links_to_rdf($response);
-  printf("The next page is <%s>\n",
-     $rdf->{'http://example.com/foo'}                        #s
-         ->{'http://www.iana.org/assignments/relation/next'} #p
-         ->[0]->{'value'}                                    #o
-     );
 
 =head1 DESCRIPTION
 
