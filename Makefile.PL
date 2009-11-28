@@ -9,6 +9,7 @@ WriteMakefile(
 		 'URI'            => '1.37' ,
 		 'URI::Escape'    => '3.29' ,
 		 'HTTP::Response' => '5.824' ,
+		 'RDF::Trine'     => '0.110',
 		 },
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/HTTP/Link/Parser.pm', # retrieve abstract from module

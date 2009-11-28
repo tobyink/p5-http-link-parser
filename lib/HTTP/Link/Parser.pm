@@ -15,7 +15,7 @@ our %EXPORT_TAGS = (
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT    = ( );
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use RDF::Trine;
 use URI;
@@ -243,7 +243,7 @@ HTTP::Link::Parser - Perl extension for parsing HTTP Link headers
 
 =head1 VERSION
 
-0.02
+0.03
 
 =head1 SYNOPSIS
 
@@ -320,17 +320,21 @@ into longer URIs identifying the same relationships, such as
 Does not (yet) support the "title*" (internationalised title)
 link parameter.
 
+Please report any bugs to L<http://rt.cpan.org/>.
+
 =head1 SEE ALSO
 
-http://www.mnot.net/drafts/draft-nottingham-http-link-header-07.txt
+L<http://www.mnot.net/drafts/draft-nottingham-http-link-header-07.txt>
 
-L<RDF::Trine>
+L<RDF::Trine>, L<HTTP::Response>.
 
-http://n2.talis.com/wiki/RDF_JSON_Specification
+L<http://n2.talis.com/wiki/RDF_JSON_Specification>.
+
+L<http://www.perlrdf.org/>.
 
 =head1 AUTHOR
 
-Toby Inkster, E<lt>mail@tobyinkster.co.ukE<gt>
+Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENSE
 
