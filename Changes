@@ -4,3 +4,12 @@ Revision history for Perl extension HTTP::Link::Parser.
 	- original version; created by h2xs 1.23 with options
 		-X HTTP::Link::Parser
 
+0.02
+	- bugfixes
+
+0.03
+	- Provide an RDF::Trine::Model
+
+0.04
+	- Support for "title*" parameter.
+

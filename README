@@ -1,45 +1,110 @@
-HTTP-Link-Parser version 0.01
-=============================
+NAME
+    HTTP::Link::Parser - Perl extension for parsing HTTP Link headers
 
-HTTP::Link::Parser parses HTTP "Link" headers found in an
-HTTP::Response object. Headers should conform to the format
-described in the forthcoming IETF specification.
+VERSION
+    0.04
 
-INSTALLATION
+SYNOPSIS
+      use HTTP::Link::Parser qw(:standard);
+      use LWP::UserAgent;
+  
+      my $ua = LWP::UserAgent->new;
+      my $response = $ua->get("http://example.com/foo");
+  
+      # Parse link headers into an RDF::Trine::Model.
+      my $model = parse_links_into_model($response);
 
-To install this module type the following:
+      # Find data about <http://example.com/foo>.
+      my $iterator = $model->get_statements(
+        RDF::Trine::Node::Resource->new('http://example.com/foo'),
+        undef,
+        undef);
 
-   perl Makefile.PL
-   make
-   make test
-   make install
+      while ($statement = $iterator->next)
+      {
+         # Skip data where the value is not a resource (i.e. link)
+         next unless $statement->object->is_resource;
 
-DEPENDENCIES
+         printf("Link to <%s> with rel=\"%s\".\n",
+            $statement->object->uri,
+            $statement->predicate->uri);
+      }
 
-This module requires these other modules and libraries:
+DESCRIPTION
+    HTTP::Link::Parser parses HTTP "Link" headers found in an HTTP::Response
+    object. Headers should conform to the format described in the
+    forthcoming IETF specification.
 
-  URI
-  URI::Escape
-  HTTP::Response
+    $model = parse_links_into_model($response, [$existing_model]);
+            $model is an RDF::Trine::Model. Dublin Core is used to encode
+            'hreflang', 'title' and 'type' link parameters.
 
-COPYRIGHT AND LICENCE
+    $rdf = parse_links_to_rdfjson($response);
+            $rdf is a hashref with a structure inspired by the RDF/JSON
+            specification. Short forms of relationships are returned in long
+            form (as predicate URIs). Dublin Core is used to encode
+            'hreflang', 'title' and 'type' link parameters.
 
-Copyright (C) 2009 by Toby Inkster
+            This can be thought of as a shortcut for:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+              use RDF::Trine 0.112;
+              $model = parse_links_into_model($response);
+              $rdf   = $model->as_hashref;
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+            But it's faster as no intermediate model is built.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+    $list = parse_links_to_list($response);
+            $list is an arrayref of hashrefs. Each hashref contains keys
+            corresponding to the link parameters of the link, and a key
+            called 'URI' corresponding to the target of the link.
+
+            The 'rel' and 'rev' keys are arrayrefs containing lists of
+            relationships. If the Link used the short form of a registered
+            relationship, then the short form is present on this list. Short
+            forms can be converted to long forms (URIs) using the
+            "HTTP::Link::Parser::relationship_uri()" function.
+
+    $long = HTTP::Link::Parser::relationship_uri($short);
+            This function is not exported by default. It may be used to
+            convert short strings identifying relationships, such as "next"
+            and "prev", into longer URIs identifying the same relationships,
+            such as "http://www.iana.org/assignments/relation/next" and
+            "http://www.iana.org/assignments/relation/prev".
+
+BUGS
+    Please report any bugs to <http://rt.cpan.org/>.
+
+SEE ALSO
+    <http://www.mnot.net/drafts/draft-nottingham-http-link-header-07.txt>
+
+    RDF::Trine, HTTP::Response.
+
+    <http://n2.talis.com/wiki/RDF_JSON_Specification>.
+
+    <http://www.perlrdf.org/>.
+
+AUTHOR
+    Toby Inkster <tobyink@cpan.org>.
+
+COPYRIGHT AND LICENSE
+    Copyright (C) 2009 by Toby Inkster
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+

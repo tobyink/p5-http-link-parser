@@ -1,0 +1,6 @@
+^HTTP-Link-Parser-.*\.tar\.gz$
+.svn/
+^Makefile$
+^Makefile\.old$
+^pm_to_blib$
+^blib/

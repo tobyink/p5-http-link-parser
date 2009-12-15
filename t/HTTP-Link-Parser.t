@@ -1,4 +1,4 @@
-use Test::More tests => 10;
+use Test::More tests => 12;
 BEGIN { use_ok('HTTP::Link::Parser') };
 
 # Create a test response to parse.
@@ -10,6 +10,7 @@ $response->push_header("Link" => "<relative>; rel=\"three\"; title=\"relative\""
 $response->push_header("Link" => "<nextdoc>; rel=\"next\"; title=\"relative\"; type=\"TEXT/HTML\"; hreflang=en");
 $response->push_header("Link" => "<subject>; rel=\"prev\"; title=\"subject\"; anchor=\"nextdoc\"");
 $response->push_header("Link" => "<author>; rev=\"made\"; title=\"author\";");
+$response->push_header("Link" => "<german-page>; rev=\"test\"; title=\"nachstes Kapitel\"; title*=UTF-8'de'n%c3%a4chstes%20Kapitel");
 
 my $M = HTTP::Link::Parser::parse_links_into_model($response);
 
@@ -61,6 +62,20 @@ ok($M->count_statements(
 		RDF::Trine::Node::Literal->new('subject'),
 		),
 	"the 'title' link parameter, with 'anchor'");
+
+ok($M->count_statements(
+		RDF::Trine::Node::Resource->new('http://example.org/german-page'),
+		RDF::Trine::Node::Resource->new('http://purl.org/dc/terms/title'),
+		RDF::Trine::Node::Literal->new('nächstes Kapitel', 'de'),
+		),
+	"the 'title*' link parameter");
+
+ok($M->count_statements(
+		RDF::Trine::Node::Resource->new('http://example.org/german-page'),
+		RDF::Trine::Node::Resource->new('http://purl.org/dc/terms/title'),
+		RDF::Trine::Node::Literal->new('nachstes Kapitel'),
+		),
+	"'title*' fallback");
 
 ok($M->count_statements(
 		RDF::Trine::Node::Resource->new('http://example.org/nextdoc'),

@@ -5,8 +5,6 @@ use strict;
 no warnings;
 
 require Exporter;
-use AutoLoader qw(AUTOLOAD);
-
 our @ISA = qw(Exporter);
 our %EXPORT_TAGS = (
 	'all' => [ qw(parse_links_to_list parse_links_to_rdfjson parse_links_into_model relationship_uri) ],
@@ -15,9 +13,10 @@ our %EXPORT_TAGS = (
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT    = ( );
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
-use RDF::Trine;
+use Encode qw(decode encode_utf8);
+use RDF::Trine 0.112;
 use URI;
 use URI::Escape;
 
@@ -58,15 +57,14 @@ sub parse_header
 	
 	$rv->{'URI'} = URI->new_abs($uri, $base);
 	
-	while ($hdrv =~ /^(\s*\;\s*(\/|[a-z0-9-]+)\s*\=\s*("[^"]*"|'[^']*'|[^\s\'\"\;\,]+)\s*)/i)
+	while ($hdrv =~ /^(\s*\;\s*(\/|[a-z0-9-]+\*?)\s*\=\s*("[^"]*"|[^\s\"\;\,]+)\s*)/i)
 	{
 		$hdrv = substr($hdrv, length($1));
 		my $key = lc $2;
 		my $val = $3;
 	
 		$val =~ s/(^"|"$)//g if ($val =~ /^".*"$/);
-		$val =~ s/(^'|'$)//g if ($val =~ /^'.*'$/ && $3 !~ /^".*"$/);
-			
+		
 		if ($key eq 'rel')
 		{
 			$val =~ s/(^\s+)|(\s+$)//g;
@@ -87,11 +85,30 @@ sub parse_header
 		}
 		elsif ($key eq 'anchor')
 		{
-			$rv->{'anchor'} = URI->new_abs($val, $base);
+			$rv->{'anchor'} = URI->new_abs($val, $base)
+				unless defined $rv->{'anchor'};
 		}
-		else
+		elsif ($key eq 'title')
 		{
-			$rv->{ $key } = $val;
+			$rv->{'title'} = $val
+				unless defined $rv->{'title'};
+		}
+		elsif ($key eq 'title*')
+		{
+			my ($charset, $lang, $string) = split /\'/, $val;
+			$string = uri_unescape($string);
+			$string = decode($charset, $string);
+			my $lit = bless [$string, undef, lc $lang], 'HTTP::Link::Parser::PlainLiteral';
+			push @{ $rv->{'title*'} }, $lit;
+		}
+		elsif ($key eq 'type')
+		{
+			$rv->{'type'} = $val
+				unless defined $rv->{'type'};
+		}
+		else # hreflang, plus any extended types.
+		{
+			push @{ $rv->{ $key } }, $val;
 		}
 	}
 	
@@ -117,50 +134,7 @@ sub parse_links_into_model
 	my $response =  shift;
 	my $model    =  shift
 	             || RDF::Trine::Model->new( RDF::Trine::Store::DBI->temporary_store );
-	
-	my $json = parse_links_to_rdfjson($response);
-
-	foreach my $s (keys %$json)
-	{
-		my ($ts, $tp, $to);
-		
-		if ($s =~ /^_:(.*)$/)
-		{
-			$ts = RDF::Trine::Node::Blank->new($1);
-		}
-		else
-		{
-			$ts = RDF::Trine::Node::Resource->new($s);
-		}
-		
-		foreach my $p (keys %{ $json->{$s} })
-		{
-			$tp = RDF::Trine::Node::Resource->new($p);
-			
-			foreach my $o (@{ $json->{$s}->{$p} })
-			{
-				if ($o->{'type'} eq 'bnode')
-				{
-					$to = RDF::Trine::Node::Blank->new((substr $o->{'value'}, 2));
-				}
-				elsif ($o->{'type'} eq 'uri')
-				{
-					$to = RDF::Trine::Node::Resource->new($o->{'value'});
-				}
-				else
-				{
-					$to = RDF::Trine::Node::Literal->new($o->{'value'}, $o->{'lang'}, $o->{'datatype'});
-				}
-				
-				if ($ts && $tp && $to)
-				{
-					my $st = RDF::Trine::Statement->new($ts, $tp, $to);
-					$model->add_statement($st);
-				}
-			}
-		}
-	}
-	
+	$model->add_hashref(parse_links_to_rdfjson($response));
 	return $model;
 }
 
@@ -209,15 +183,31 @@ sub parse_links_to_rdfjson
 				};
 		}
 		
+		if (defined $link->{'title*'})
+		{
+			foreach my $t (@{ $link->{'title*'} })
+			{
+				push @{ $rv->{ $object }->{ 'http://purl.org/dc/terms/title' } },
+					{
+						'value'    => encode_utf8("$t"),
+						'type'     => 'literal',
+						'lang'     => $t->lang,
+					};
+			}
+		}
+
 		if (defined $link->{'hreflang'})
 		{
-			push @{ $rv->{ $object }->{ 'http://purl.org/dc/terms/language' } },
-				{
-					'value'    => 'http://www.lingvoj.org/lingvo/' . uri_escape(lc $link->{'hreflang'}),
-					'type'     => 'uri',
-				};
+			foreach my $lang (@{ $link->{'hreflang'} })
+			{
+				push @{ $rv->{ $object }->{ 'http://purl.org/dc/terms/language' } },
+					{
+						'value'    => 'http://www.lingvoj.org/lingvo/' . uri_escape(lc $lang),
+						'type'     => 'uri',
+					};
+			}
 		}
-		
+
 		if (defined $link->{'type'} && $link->{'type'} =~ m?([A-Z0-9\!\#\$\&\.\+\-\^\_]{1,127})/([A-Z0-9\!\#\$\&\.\+\-\^\_]{1,127})?i)
 		{
 			my $type    = lc $1;
@@ -233,6 +223,16 @@ sub parse_links_to_rdfjson
 	return $rv;
 }
 
+1;
+
+package HTTP::Link::Parser::PlainLiteral;
+
+use overload
+	'""' => sub { $_[0]->[0] },
+	'eq' => sub { $_[0]->[0] eq $_[1]->[0] and lc $_[0]->[2] eq lc $_[1]->[2] };
+
+sub value { $_[0]->[0]; }
+sub lang { length $_[0]->[2] ? $_[0]->[2] : undef; }
 
 1;
 __END__
@@ -243,7 +243,7 @@ HTTP::Link::Parser - Perl extension for parsing HTTP Link headers
 
 =head1 VERSION
 
-0.03
+0.04
 
 =head1 SYNOPSIS
 
@@ -293,6 +293,14 @@ specification. Short forms of relationships are returned in long
 form (as predicate URIs). Dublin Core is used to encode 'hreflang',
 'title' and 'type' link parameters.
 
+This can be thought of as a shortcut for:
+
+  use RDF::Trine 0.112;
+  $model = parse_links_into_model($response);
+  $rdf   = $model->as_hashref;
+
+But it's faster as no intermediate model is built.
+
 =item $list = parse_links_to_list($response);
 
 C<$list> is an arrayref of hashrefs. Each hashref contains keys
@@ -316,9 +324,6 @@ into longer URIs identifying the same relationships, such as
 =back
 
 =head1 BUGS
-
-Does not (yet) support the "title*" (internationalised title)
-link parameter.
 
 Please report any bugs to L<http://rt.cpan.org/>.
 

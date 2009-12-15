@@ -1,0 +1,31 @@
+---
+abstract: 'Perl extension for parsing HTTP Link headers'
+author:
+  - 'Toby Inkster <tobyink@cpan.org>'
+build_requires:
+  ExtUtils::MakeMaker: 6.42
+  Test::More: 0.61
+configure_requires:
+  ExtUtils::MakeMaker: 6.42
+distribution_type: module
+generated_by: 'Module::Install version 0.91'
+license: mit
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: HTTP-Link-Parser
+no_index:
+  directory:
+    - inc
+    - t
+requires:
+  Encode: 0
+  RDF::Trine: 0.112
+  URI: 1.30
+  URI::Escape: 3.00
+  perl: 5.6.0
+resources:
+  bugtracker: http://search.cpan.org/dist/HTTP-Link-Parser/
+  homepage: http://search.cpan.org/dist/HTTP-Link-Parser/
+  license: http://opensource.org/licenses/mit-license.php
+version: 0.04
