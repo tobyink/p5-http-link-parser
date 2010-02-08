@@ -1,15 +1,29 @@
-Revision history for Perl extension HTTP::Link::Parser.
+############################################################################
+## Changes #################################################################
+############################################################################
 
-0.01  Fri Oct  9 13:23:07 2009
-	- original version; created by h2xs 1.23 with options
-		-X HTTP::Link::Parser
+HTTP-Link-Parser
+================
 
-0.02
-	- bugfixes
+Created:      2009-10-09
+Home page:    <http://search.cpan.org/dist/HTTP-Link-Parser/>
+Bug tracker:  <http://rt.cpan.org/Dist/Display.html?Queue=HTTP-Link-Parser>
+Maintainer:   Toby Inkster <mailto:tobyink@cpan.org>
 
-0.03
-	- Provide an RDF::Trine::Model
+0.05 [2010-02-07]
+ - (Update) Copyright 2010.
+ - General documentation improvements.
+ - (Update) Use my new build system.
+ - Clean up @EXPORT and @EXPORT_OK.
+ - Rename parse_header to parse_single_link, and document this.
 
-0.04
-	- Support for "title*" parameter.
+0.04 [2009-12-15]
+ - (Addition) Support the 'title*' parameter.
+
+0.03 [2009-11-28]
+ - (Addition) Provide an RDF::Trine::Model
+
+0.02 [2009-11-24]
+
+0.01 [2009-10-09] # First release
 

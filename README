@@ -1,11 +1,8 @@
 NAME
-    HTTP::Link::Parser - Perl extension for parsing HTTP Link headers
-
-VERSION
-    0.04
+    HTTP::Link::Parser - parse HTTP Link headers
 
 SYNOPSIS
-      use HTTP::Link::Parser qw(:standard);
+      use HTTP::Link::Parser ':standard';
       use LWP::UserAgent;
   
       my $ua = LWP::UserAgent->new;
@@ -30,46 +27,74 @@ SYNOPSIS
             $statement->predicate->uri);
       }
 
+VERSION
+    0.05
+
 DESCRIPTION
     HTTP::Link::Parser parses HTTP "Link" headers found in an HTTP::Response
     object. Headers should conform to the format described in the
     forthcoming IETF specification.
 
-    $model = parse_links_into_model($response, [$existing_model]);
-            $model is an RDF::Trine::Model. Dublin Core is used to encode
-            'hreflang', 'title' and 'type' link parameters.
+  Functions
+    To export all functions:
 
-    $rdf = parse_links_to_rdfjson($response);
-            $rdf is a hashref with a structure inspired by the RDF/JSON
-            specification. Short forms of relationships are returned in long
-            form (as predicate URIs). Dublin Core is used to encode
-            'hreflang', 'title' and 'type' link parameters.
+      use HTTP::Link::Parser ':all';
 
-            This can be thought of as a shortcut for:
+    "$model = parse_links_into_model($response, [$existing_model])"
+        Takes an HTTP::Response object (or in fact, any HTTP::Message
+        object) and returns an RDF::Trine::Model containing link data
+        extracted from the response. Dublin Core is used to encode
+        'hreflang', 'title' and 'type' link parameters.
 
-              use RDF::Trine 0.112;
-              $model = parse_links_into_model($response);
-              $rdf   = $model->as_hashref;
+        $existing_model is an RDF::Trine::Model to add data to. If omitted,
+        a new, empty model is created.
 
-            But it's faster as no intermediate model is built.
+    "$data = parse_links_to_rdfjson($response)"
+        $data is a hashref with a structure inspired by the RDF/JSON
+        specification. This can be thought of as a shortcut for:
 
-    $list = parse_links_to_list($response);
-            $list is an arrayref of hashrefs. Each hashref contains keys
-            corresponding to the link parameters of the link, and a key
-            called 'URI' corresponding to the target of the link.
+          use RDF::Trine 0.112;
+          $model = parse_links_into_model($response);
+          $data  = $model->as_hashref;
 
-            The 'rel' and 'rev' keys are arrayrefs containing lists of
-            relationships. If the Link used the short form of a registered
-            relationship, then the short form is present on this list. Short
-            forms can be converted to long forms (URIs) using the
-            "HTTP::Link::Parser::relationship_uri()" function.
+        But it's faster as no intermediate model is built.
 
-    $long = HTTP::Link::Parser::relationship_uri($short);
-            This function is not exported by default. It may be used to
-            convert short strings identifying relationships, such as "next"
-            and "prev", into longer URIs identifying the same relationships,
-            such as "http://www.iana.org/assignments/relation/next" and
-            "http://www.iana.org/assignments/relation/prev".
+    "$list = parse_links_to_list($response)"
+        This function is not exported by default.
+
+        $list is an arrayref of hashrefs. Each hashref contains keys
+        corresponding to the link parameters of the link, and a key called
+        'URI' corresponding to the target of the link.
+
+        The 'rel' and 'rev' keys are arrayrefs containing lists of
+        relationships. If the Link used the short form of a registered
+        relationship, then the short form is present on this list. Short
+        forms can be converted to long forms (URIs) using the
+        "relationship_uri" function.
+
+        The structure returned by this function should not be considered
+        stable.
+
+    "$data = parse_single_link($link, $base)"
+        This function is not exported by default.
+
+        This parses a single Link header (minus the "Link:" bit itself) into
+        a hashref structure. A base URI must be included in case the link
+        contains relative URIs.
+
+        The structure returned by this function should not be considered
+        stable.
+
+    "$long = relationship_uri($short)"
+        This function is not exported by default.
+
+        It may be used to convert short strings identifying relationships,
+        such as "next" and "prev", into longer URIs identifying the same
+        relationships, such as
+        "http://www.iana.org/assignments/relation/next" and
+        "http://www.iana.org/assignments/relation/prev".
+
+        If passed a string which is a URI already, simply returns it as-is.
 
 BUGS
     Please report any bugs to <http://rt.cpan.org/>.
@@ -77,7 +102,7 @@ BUGS
 SEE ALSO
     <http://www.mnot.net/drafts/draft-nottingham-http-link-header-07.txt>
 
-    RDF::Trine, HTTP::Response.
+    RDF::Trine, RDF::TrineShortcuts, HTTP::Response.
 
     <http://n2.talis.com/wiki/RDF_JSON_Specification>.
 
@@ -86,9 +111,10 @@ SEE ALSO
 AUTHOR
     Toby Inkster <tobyink@cpan.org>.
 
-COPYRIGHT AND LICENSE
-    Copyright (C) 2009 by Toby Inkster
+COPYRIGHT AND LICENCE
+    Copyright (C) 2009-2010 by Toby Inkster
 
+  a.k.a. "The MIT Licence"
     Permission is hereby granted, free of charge, to any person obtaining a
     copy of this software and associated documentation files (the
     "Software"), to deal in the Software without restriction, including

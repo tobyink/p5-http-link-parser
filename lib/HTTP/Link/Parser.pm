@@ -1,133 +1,89 @@
+=head1 NAME
+
+HTTP::Link::Parser - parse HTTP Link headers
+
+=head1 SYNOPSIS
+
+  use HTTP::Link::Parser ':standard';
+  use LWP::UserAgent;
+  
+  my $ua = LWP::UserAgent->new;
+  my $response = $ua->get("http://example.com/foo");
+  
+  # Parse link headers into an RDF::Trine::Model.
+  my $model = parse_links_into_model($response);
+
+  # Find data about <http://example.com/foo>.
+  my $iterator = $model->get_statements(
+    RDF::Trine::Node::Resource->new('http://example.com/foo'),
+    undef,
+    undef);
+
+  while ($statement = $iterator->next)
+  {
+     # Skip data where the value is not a resource (i.e. link)
+     next unless $statement->object->is_resource;
+
+     printf("Link to <%s> with rel=\"%s\".\n",
+        $statement->object->uri,
+        $statement->predicate->uri);
+  }
+
+=cut
+
 package HTTP::Link::Parser;
 
-use 5.006000;
+use 5.006;
 use strict;
 no warnings;
 
 require Exporter;
 our @ISA = qw(Exporter);
 our %EXPORT_TAGS = (
-	'all' => [ qw(parse_links_to_list parse_links_to_rdfjson parse_links_into_model relationship_uri) ],
-	'standard' => [ qw(parse_links_to_list parse_links_to_rdfjson parse_links_into_model) ]
+	'all'      => [ qw(parse_links_into_model parse_links_to_rdfjson parse_links_to_list parse_single_link relationship_uri) ],
+	'standard' => [ qw(parse_links_into_model parse_links_to_rdfjson) ]
 	);
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
-our @EXPORT    = ( );
+our @EXPORT    = ( @{ $EXPORT_TAGS{'standard'} } );
 
-our $VERSION = '0.04';
+=head1 VERSION
+
+0.05
+
+=cut
+
+our $VERSION = '0.05';
 
 use Encode qw(decode encode_utf8);
 use RDF::Trine 0.112;
 use URI;
 use URI::Escape;
 
-sub relationship_uri
-{
-	my $str = shift;
+=head1 DESCRIPTION
 
-	if ($str =~ /^([a-z][a-z0-9\+\.\-]*)\:/i)
-	{
-		# seems to be an absolute URI, so can safely return "as is".
-		return $str;
-	}
+HTTP::Link::Parser parses HTTP "Link" headers found in an
+HTTP::Response object. Headers should conform to the format
+described in the forthcoming IETF specification.
 
-	return 'http://www.iana.org/assignments/relation/' . (lc $str);
+=head2 Functions
 
-	my $url = url (lc $str), 'http://www.iana.org/assignments/relation/';
-	return $url->abs->as_string;
+To export all functions:
 
-	return undef;
-}
+  use HTTP::Link::Parser ':all';
 
-sub parse_header
-{
-	my $hdrv = shift;
-	my $base = shift;
-	my $rv   = {};
-	
-	my $uri  = undef;
-	if ($hdrv =~ /^(\s*<([^>]*)>\s*)/)
-	{
-		$uri  = $2;
-		$hdrv = substr($hdrv, length($1));
-	}
-	else
-	{
-		return $rv;
-	}
-	
-	$rv->{'URI'} = URI->new_abs($uri, $base);
-	
-	while ($hdrv =~ /^(\s*\;\s*(\/|[a-z0-9-]+\*?)\s*\=\s*("[^"]*"|[^\s\"\;\,]+)\s*)/i)
-	{
-		$hdrv = substr($hdrv, length($1));
-		my $key = lc $2;
-		my $val = $3;
-	
-		$val =~ s/(^"|"$)//g if ($val =~ /^".*"$/);
-		
-		if ($key eq 'rel')
-		{
-			$val =~ s/(^\s+)|(\s+$)//g;
-			$val =~ s/\s+/ /g;
-			
-			my @rels = split / /, $val;
-			foreach my $rel (@rels)
-				{ push @{ $rv->{'rel'} }, $rel; }
-		}
-		elsif ($key eq 'rev')
-		{
-			$val =~ s/(^\s+)|(\s+$)//g;
-			$val =~ s/\s+/ /g;
-			
-			my @rels = split / /, $val;
-			foreach my $rel (@rels)
-				{ push @{ $rv->{'rev'} }, $rel; }
-		}
-		elsif ($key eq 'anchor')
-		{
-			$rv->{'anchor'} = URI->new_abs($val, $base)
-				unless defined $rv->{'anchor'};
-		}
-		elsif ($key eq 'title')
-		{
-			$rv->{'title'} = $val
-				unless defined $rv->{'title'};
-		}
-		elsif ($key eq 'title*')
-		{
-			my ($charset, $lang, $string) = split /\'/, $val;
-			$string = uri_unescape($string);
-			$string = decode($charset, $string);
-			my $lit = bless [$string, undef, lc $lang], 'HTTP::Link::Parser::PlainLiteral';
-			push @{ $rv->{'title*'} }, $lit;
-		}
-		elsif ($key eq 'type')
-		{
-			$rv->{'type'} = $val
-				unless defined $rv->{'type'};
-		}
-		else # hreflang, plus any extended types.
-		{
-			push @{ $rv->{ $key } }, $val;
-		}
-	}
-	
-	return $rv;
-}
+=over 4
 
-sub parse_links_to_list
-{
-	my $response = shift;
-	my $rv       = [];
-	my $base     = URI->new($response->base);
-	
-	foreach my $header ($response->header('link'))
-	{
-		push @$rv, parse_header($header, $base);
-	}
-	
-	return $rv;
-}
+=item C<< $model = parse_links_into_model($response, [$existing_model]) >>
+
+Takes an L<HTTP::Response> object (or in fact, any L<HTTP::Message> object)
+and returns an L<RDF::Trine::Model> containing link data extracted from the
+response. Dublin Core is used to encode 'hreflang', 'title' and 'type' link
+parameters.
+
+C<$existing_model> is an RDF::Trine::Model to add data to. If omitted, a
+new, empty model is created.
+
+=cut
 
 sub parse_links_into_model
 {
@@ -137,6 +93,19 @@ sub parse_links_into_model
 	$model->add_hashref(parse_links_to_rdfjson($response));
 	return $model;
 }
+
+=item C<< $data = parse_links_to_rdfjson($response) >>
+
+C<$data> is a hashref with a structure inspired by the RDF/JSON
+specification. This can be thought of as a shortcut for:
+
+  use RDF::Trine 0.112;
+  $model = parse_links_into_model($response);
+  $data  = $model->as_hashref;
+
+But it's faster as no intermediate model is built.
+
+=cut
 
 sub parse_links_to_rdfjson
 {
@@ -223,6 +192,158 @@ sub parse_links_to_rdfjson
 	return $rv;
 }
 
+=item C<< $list = parse_links_to_list($response) >>
+
+This function is not exported by default. 
+
+C<$list> is an arrayref of hashrefs. Each hashref contains keys
+corresponding to the link parameters of the link, and a key called
+'URI' corresponding to the target of the link.
+
+The 'rel' and 'rev' keys are arrayrefs containing lists of
+relationships. If the Link used the short form of a registered
+relationship, then the short form is present on this list. Short
+forms can be converted to long forms (URIs) using the
+C<relationship_uri> function.
+
+The structure returned by this function should not be considered
+stable.
+
+=cut
+
+sub parse_links_to_list
+{
+	my $response = shift;	my $rv       = [];
+	my $base     = URI->new($response->base);
+	
+	foreach my $header ($response->header('link'))
+	{
+		push @$rv, parse_single_link($header, $base);
+	}
+	
+	return $rv;
+}
+
+=item C<< $data = parse_single_link($link, $base) >>
+
+This function is not exported by default. 
+
+This parses a single Link header (minus the "Link:" bit itself) into a hashref
+structure. A base URI must be included in case the link contains relative URIs.
+
+The structure returned by this function should not be considered
+stable.
+
+=cut
+
+sub parse_single_link
+{
+	my $hdrv = shift;
+	my $base = shift;
+	my $rv   = {};
+	
+	my $uri  = undef;
+	if ($hdrv =~ /^(\s*<([^>]*)>\s*)/)
+	{
+		$uri  = $2;
+		$hdrv = substr($hdrv, length($1));
+	}
+	else
+	{
+		return $rv;
+	}
+	
+	$rv->{'URI'} = URI->new_abs($uri, $base);
+	
+	while ($hdrv =~ /^(\s*\;\s*(\/|[a-z0-9-]+\*?)\s*\=\s*("[^"]*"|[^\s\"\;\,]+)\s*)/i)
+	{
+		$hdrv = substr($hdrv, length($1));
+		my $key = lc $2;
+		my $val = $3;
+	
+		$val =~ s/(^"|"$)//g if ($val =~ /^".*"$/);
+		
+		if ($key eq 'rel')
+		{
+			$val =~ s/(^\s+)|(\s+$)//g;
+			$val =~ s/\s+/ /g;
+			
+			my @rels = split / /, $val;
+			foreach my $rel (@rels)
+				{ push @{ $rv->{'rel'} }, $rel; }
+		}
+		elsif ($key eq 'rev')
+		{
+			$val =~ s/(^\s+)|(\s+$)//g;
+			$val =~ s/\s+/ /g;
+			
+			my @rels = split / /, $val;
+			foreach my $rel (@rels)
+				{ push @{ $rv->{'rev'} }, $rel; }
+		}
+		elsif ($key eq 'anchor')
+		{
+			$rv->{'anchor'} = URI->new_abs($val, $base)
+				unless defined $rv->{'anchor'};
+		}
+		elsif ($key eq 'title')
+		{
+			$rv->{'title'} = $val
+				unless defined $rv->{'title'};
+		}
+		elsif ($key eq 'title*')
+		{
+			my ($charset, $lang, $string) = split /\'/, $val;
+			$string = uri_unescape($string);
+			$string = decode($charset, $string);
+			my $lit = bless [$string, undef, lc $lang], 'HTTP::Link::Parser::PlainLiteral';
+			push @{ $rv->{'title*'} }, $lit;
+		}
+		elsif ($key eq 'type')
+		{
+			$rv->{'type'} = $val
+				unless defined $rv->{'type'};
+		}
+		else # hreflang, plus any extended types.
+		{
+			push @{ $rv->{ $key } }, $val;
+		}
+	}
+	
+	return $rv;
+}
+
+=item C<< $long = relationship_uri($short) >>
+
+This function is not exported by default. 
+
+It may be used to convert short strings identifying relationships,
+such as "next" and "prev", into longer URIs identifying the same
+relationships, such as "http://www.iana.org/assignments/relation/next"
+and "http://www.iana.org/assignments/relation/prev".
+
+If passed a string which is a URI already, simply returns it as-is.
+
+=cut
+
+sub relationship_uri
+{
+	my $str = shift;
+
+	if ($str =~ /^([a-z][a-z0-9\+\.\-]*)\:/i)
+	{
+		# seems to be an absolute URI, so can safely return "as is".
+		return $str;
+	}
+
+	return 'http://www.iana.org/assignments/relation/' . (lc $str);
+
+	my $url = url (lc $str), 'http://www.iana.org/assignments/relation/';
+	return $url->abs->as_string;
+
+	return undef;
+}
+
 1;
 
 package HTTP::Link::Parser::PlainLiteral;
@@ -237,90 +358,6 @@ sub lang { length $_[0]->[2] ? $_[0]->[2] : undef; }
 1;
 __END__
 
-=head1 NAME
-
-HTTP::Link::Parser - Perl extension for parsing HTTP Link headers
-
-=head1 VERSION
-
-0.04
-
-=head1 SYNOPSIS
-
-  use HTTP::Link::Parser qw(:standard);
-  use LWP::UserAgent;
-  
-  my $ua = LWP::UserAgent->new;
-  my $response = $ua->get("http://example.com/foo");
-  
-  # Parse link headers into an RDF::Trine::Model.
-  my $model = parse_links_into_model($response);
-
-  # Find data about <http://example.com/foo>.
-  my $iterator = $model->get_statements(
-    RDF::Trine::Node::Resource->new('http://example.com/foo'),
-    undef,
-    undef);
-
-  while ($statement = $iterator->next)
-  {
-     # Skip data where the value is not a resource (i.e. link)
-     next unless $statement->object->is_resource;
-
-     printf("Link to <%s> with rel=\"%s\".\n",
-        $statement->object->uri,
-        $statement->predicate->uri);
-  }
-  
-
-=head1 DESCRIPTION
-
-HTTP::Link::Parser parses HTTP "Link" headers found in an
-HTTP::Response object. Headers should conform to the format
-described in the forthcoming IETF specification.
-
-=over 8
-
-=item $model = parse_links_into_model($response, [$existing_model]);
-
-C<$model> is an RDF::Trine::Model. Dublin Core is used to encode
-'hreflang', 'title' and 'type' link parameters.
-
-=item $rdf = parse_links_to_rdfjson($response);
-
-C<$rdf> is a hashref with a structure inspired by the RDF/JSON
-specification. Short forms of relationships are returned in long
-form (as predicate URIs). Dublin Core is used to encode 'hreflang',
-'title' and 'type' link parameters.
-
-This can be thought of as a shortcut for:
-
-  use RDF::Trine 0.112;
-  $model = parse_links_into_model($response);
-  $rdf   = $model->as_hashref;
-
-But it's faster as no intermediate model is built.
-
-=item $list = parse_links_to_list($response);
-
-C<$list> is an arrayref of hashrefs. Each hashref contains keys
-corresponding to the link parameters of the link, and a key called
-'URI' corresponding to the target of the link.
-
-The 'rel' and 'rev' keys are arrayrefs containing lists of
-relationships. If the Link used the short form of a registered
-relationship, then the short form is present on this list. Short
-forms can be converted to long forms (URIs) using the
-C<HTTP::Link::Parser::relationship_uri()> function.
-
-=item $long = HTTP::Link::Parser::relationship_uri($short);
-
-This function is not exported by default. It may be used to convert
-short strings identifying relationships, such as "next" and "prev",
-into longer URIs identifying the same relationships, such as
-"http://www.iana.org/assignments/relation/next" and
-"http://www.iana.org/assignments/relation/prev".
-
 =back
 
 =head1 BUGS
@@ -331,7 +368,7 @@ Please report any bugs to L<http://rt.cpan.org/>.
 
 L<http://www.mnot.net/drafts/draft-nottingham-http-link-header-07.txt>
 
-L<RDF::Trine>, L<HTTP::Response>.
+L<RDF::Trine>, L<RDF::TrineShortcuts>, L<HTTP::Response>.
 
 L<http://n2.talis.com/wiki/RDF_JSON_Specification>.
 
@@ -341,9 +378,11 @@ L<http://www.perlrdf.org/>.
 
 Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
-=head1 COPYRIGHT AND LICENSE
+=head1 COPYRIGHT AND LICENCE
 
-Copyright (C) 2009 by Toby Inkster
+Copyright (C) 2009-2010 by Toby Inkster
+
+=head2 a.k.a. "The MIT Licence"
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

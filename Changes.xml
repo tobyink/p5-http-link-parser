@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF
+   xmlns:dc="http://purl.org/dc/terms/"
+   xmlns:dcs="http://ontologi.es/doap-changeset#"
+   xmlns:foaf="http://xmlns.com/foaf/0.1/"
+   xmlns:my="http://search.cpan.org/dist/HTTP-Link-Parser/#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+   xmlns:toby="http://tobyinkster.co.uk/#"
+   xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+   xmlns="http://usefulinc.com/ns/doap#">
+  <rdf:Description rdf:about="file:///home/tai/src/perlmods/HTTP-Link-Parser/Changes.ttl">
+    <dc:creator rdf:resource="http://tobyinkster.co.uk/#i"/>
+    <dc:description xml:lang="en">Revision history for Perl extension HTTP::Link::Parser.</dc:description>
+    <dc:subject rdf:resource="http://search.cpan.org/dist/HTTP-Link-Parser/#project"/>
+    <dc:title>Changes</dc:title>
+  </rdf:Description>
+  <Version rdf:about="http://search.cpan.org/dist/HTTP-Link-Parser/#v_0_01">
+    <dc:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2009-10-09</dc:issued>
+    <file-release rdf:resource="http://backpan.perl.org/authors/id/T/TO/TOBYINK/HTTP-Link-Parser-0.01.tar.gz"/>
+    <revision rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.01</revision>
+    <rdfs:label xml:lang="en">First release</rdfs:label>
+  </Version>
+  <Version rdf:about="http://search.cpan.org/dist/HTTP-Link-Parser/#v_0_02">
+    <dcs:changeset>
+      <rdf:Description>
+        <dcs:versus rdf:resource="http://search.cpan.org/dist/HTTP-Link-Parser/#v_0_01"/>
+        <rdfs:comment>Bugfixes</rdfs:comment>
+      </rdf:Description>
+    </dcs:changeset>
+    <dc:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2009-11-24</dc:issued>
+    <file-release rdf:resource="http://backpan.perl.org/authors/id/T/TO/TOBYINK/HTTP-Link-Parser-0.02.tar.gz"/>
+    <revision rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.02</revision>
+  </Version>
+  <Version rdf:about="http://search.cpan.org/dist/HTTP-Link-Parser/#v_0_03">
+    <dcs:changeset>
+      <rdf:Description>
+        <dcs:item>
+          <dcs:Addition>
+            <rdfs:label xml:lang="en">Provide an RDF::Trine::Model</rdfs:label>
+          </dcs:Addition>
+        </dcs:item>
+        <dcs:versus rdf:resource="http://search.cpan.org/dist/HTTP-Link-Parser/#v_0_02"/>
+      </rdf:Description>
+    </dcs:changeset>
+    <dc:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2009-11-28</dc:issued>
+    <file-release rdf:resource="http://backpan.perl.org/authors/id/T/TO/TOBYINK/HTTP-Link-Parser-0.03.tar.gz"/>
+    <revision rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.03</revision>
+  </Version>
+  <Version rdf:about="http://search.cpan.org/dist/HTTP-Link-Parser/#v_0_04">
+    <dcs:changeset>
+      <rdf:Description>
+        <dcs:item>
+          <dcs:Addition>
+            <rdfs:label xml:lang="en">Support the 'title*' parameter.</rdfs:label>
+          </dcs:Addition>
+        </dcs:item>
+        <dcs:versus rdf:resource="http://search.cpan.org/dist/HTTP-Link-Parser/#v_0_03"/>
+      </rdf:Description>
+    </dcs:changeset>
+    <dc:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2009-12-15</dc:issued>
+    <file-release rdf:resource="http://backpan.perl.org/authors/id/T/TO/TOBYINK/HTTP-Link-Parser-0.04.tar.gz"/>
+    <revision rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.04</revision>
+  </Version>
+  <Version rdf:about="http://search.cpan.org/dist/HTTP-Link-Parser/#v_0_05">
+    <dcs:changeset>
+      <rdf:Description>
+        <dcs:item>
+          <rdf:Description>
+            <rdfs:label xml:lang="en">General documentation improvements.</rdfs:label>
+          </rdf:Description>
+        </dcs:item>
+        <dcs:item>
+          <rdf:Description>
+            <rdfs:label xml:lang="en">Rename parse_header to parse_single_link, and document this.</rdfs:label>
+          </rdf:Description>
+        </dcs:item>
+        <dcs:item>
+          <rdf:Description>
+            <rdfs:label xml:lang="en">Clean up @EXPORT and @EXPORT_OK.</rdfs:label>
+          </rdf:Description>
+        </dcs:item>
+        <dcs:item>
+          <dcs:Update>
+            <rdfs:label xml:lang="en">Copyright 2010.</rdfs:label>
+          </dcs:Update>
+        </dcs:item>
+        <dcs:item>
+          <dcs:Update>
+            <rdfs:label xml:lang="en">Use my new build system.</rdfs:label>
+          </dcs:Update>
+        </dcs:item>
+        <dcs:versus rdf:resource="http://search.cpan.org/dist/HTTP-Link-Parser/#v_0_04"/>
+      </rdf:Description>
+    </dcs:changeset>
+    <dc:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2010-02-07</dc:issued>
+    <file-release rdf:resource="http://backpan.perl.org/authors/id/T/TO/TOBYINK/HTTP-Link-Parser-0.05.tar.gz"/>
+    <revision rdf:datatype="http://www.w3.org/2001/XMLSchema#string">0.05</revision>
+  </Version>
+  <Project rdf:about="http://search.cpan.org/dist/HTTP-Link-Parser/#project">
+    <bug-database rdf:resource="http://rt.cpan.org/Dist/Display.html?Queue=HTTP-Link-Parser"/>
+    <created rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2009-10-09</created>
+    <developer rdf:resource="http://tobyinkster.co.uk/#i"/>
+    <documenter rdf:resource="http://tobyinkster.co.uk/#i"/>
+    <download-page rdf:resource="http://search.cpan.org/dist/HTTP-Link-Parser/"/>
+    <homepage rdf:resource="http://search.cpan.org/dist/HTTP-Link-Parser/"/>
+    <license rdf:resource="http://www.opensource.org/licenses/mit-license.php"/>
+    <maintainer rdf:resource="http://tobyinkster.co.uk/#i"/>
+    <name>HTTP-Link-Parser</name>
+    <programming-language>Perl</programming-language>
+    <release rdf:resource="http://search.cpan.org/dist/HTTP-Link-Parser/#v_0_01"/>
+    <release rdf:resource="http://search.cpan.org/dist/HTTP-Link-Parser/#v_0_02"/>
+    <release rdf:resource="http://search.cpan.org/dist/HTTP-Link-Parser/#v_0_03"/>
+    <release rdf:resource="http://search.cpan.org/dist/HTTP-Link-Parser/#v_0_04"/>
+    <release rdf:resource="http://search.cpan.org/dist/HTTP-Link-Parser/#v_0_05"/>
+    <repository>
+      <SVNRepository>
+        <browse rdf:resource="http://goddamn.co.uk/viewvc/perlmods/HTTP-Link-Parser/"/>
+      </SVNRepository>
+    </repository>
+    <shortdesc xml:lang="en">parse HTTP Link headers</shortdesc>
+    <tester rdf:resource="http://tobyinkster.co.uk/#i"/>
+  </Project>
+  <foaf:Person rdf:about="http://tobyinkster.co.uk/#i">
+    <foaf:homepage rdf:resource="http://tobyinkster.co.uk/"/>
+    <foaf:mbox rdf:resource="mailto:tobyink@cpan.org"/>
+    <foaf:name>Toby Inkster</foaf:name>
+    <foaf:page rdf:resource="http://search.cpan.org/~tobyink/"/>
+  </foaf:Person>
+</rdf:RDF>
