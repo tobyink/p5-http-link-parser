@@ -18,6 +18,7 @@ test_requires       'Test::More' => '0.61';
 
 requires            'Encode'             => 0;
 requires            'RDF::Trine'         => '0.112';
+requires            'Scalar::Util'       => 0;
 requires            'URI'                => '1.30';
 requires            'URI::Escape'        => '3.00';
 
@@ -34,6 +35,7 @@ write_doap_changes_xml;
 
 include 'Test::Signature';
 auto_install;
+
 WriteAll(
 	'meta' => 1,
 	'sign' => 1,

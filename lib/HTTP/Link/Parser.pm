@@ -48,14 +48,15 @@ our @EXPORT    = ( @{ $EXPORT_TAGS{'standard'} } );
 
 =head1 VERSION
 
-0.05
+0.100
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.100';
 
 use Encode qw(decode encode_utf8);
 use RDF::Trine 0.112;
+use Scalar::Util qw(blessed);
 use URI;
 use URI::Escape;
 
@@ -145,11 +146,23 @@ sub parse_links_to_rdfjson
 		
 		if (defined $link->{'title'})
 		{
-			push @{ $rv->{ $object }->{ 'http://purl.org/dc/terms/title' } },
-				{
-					'value'    => $link->{'title'},
-					'type'     => 'literal',
-				};
+			if (blessed($link->{'title'}) && $link->{'title'}->isa('HTTP::Link::Parser::PlainLiteral'))
+			{
+				push @{ $rv->{ $object }->{ 'http://purl.org/dc/terms/title' } },
+					{
+						'value'    => encode_utf8($link->{'title'}.''),
+						'type'     => 'literal',
+						'lang'     => $link->{'title'}->lang,
+					};
+			}
+			else
+			{
+				push @{ $rv->{ $object }->{ 'http://purl.org/dc/terms/title' } },
+					{
+						'value'    => $link->{'title'},
+						'type'     => 'literal',
+					};
+			}
 		}
 		
 		if (defined $link->{'title*'})
@@ -213,23 +226,31 @@ stable.
 
 sub parse_links_to_list
 {
-	my $response = shift;	my $rv       = [];
-	my $base     = URI->new($response->base);
+	my $response = shift;
+	my $rv       = [];
+	my $base     = URI->new( $response->base );
 	
-	foreach my $header ($response->header('link'))
+	my $clang;
+	if ($response->header('Content-Language') =~ /^\s*([^,\s]+)/)
 	{
-		push @$rv, parse_single_link($header, $base);
+		$clang = $1;
+	}
+	
+	foreach my $header ($response->header('Link'))
+	{
+		push @$rv, parse_single_link($header, $base, $clang);
 	}
 	
 	return $rv;
 }
 
-=item C<< $data = parse_single_link($link, $base) >>
+=item C<< $data = parse_single_link($link, $base, [$default_lang]) >>
 
 This function is not exported by default. 
 
 This parses a single Link header (minus the "Link:" bit itself) into a hashref
 structure. A base URI must be included in case the link contains relative URIs.
+A default language can be provided for the 'title' parameter.
 
 The structure returned by this function should not be considered
 stable.
@@ -238,8 +259,7 @@ stable.
 
 sub parse_single_link
 {
-	my $hdrv = shift;
-	my $base = shift;
+	my ($hdrv, $base, $default_lang) = @_;
 	my $rv   = {};
 	
 	my $uri  = undef;
@@ -288,8 +308,16 @@ sub parse_single_link
 		}
 		elsif ($key eq 'title')
 		{
-			$rv->{'title'} = $val
-				unless defined $rv->{'title'};
+			if (defined $default_lang)
+			{
+				my $lit = bless [$val, undef, lc $default_lang], 'HTTP::Link::Parser::PlainLiteral';
+				push @{ $rv->{'title'} }, $lit;
+			}
+			else
+			{
+				$rv->{'title'} = $val
+					unless defined $rv->{'title'};
+			}
 		}
 		elsif ($key eq 'title*')
 		{
@@ -366,7 +394,7 @@ Please report any bugs to L<http://rt.cpan.org/>.
 
 =head1 SEE ALSO
 
-L<http://www.mnot.net/drafts/draft-nottingham-http-link-header-07.txt>
+L<http://www.mnot.net/drafts/draft-nottingham-http-link-header-10.txt>
 
 L<RDF::Trine>, L<RDF::TrineShortcuts>, L<HTTP::Response>.
 

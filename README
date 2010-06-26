@@ -28,7 +28,7 @@ SYNOPSIS
       }
 
 VERSION
-    0.05
+    0.100
 
 DESCRIPTION
     HTTP::Link::Parser parses HTTP "Link" headers found in an HTTP::Response
@@ -75,12 +75,13 @@ DESCRIPTION
         The structure returned by this function should not be considered
         stable.
 
-    "$data = parse_single_link($link, $base)"
+    "$data = parse_single_link($link, $base, [$default_lang])"
         This function is not exported by default.
 
         This parses a single Link header (minus the "Link:" bit itself) into
         a hashref structure. A base URI must be included in case the link
-        contains relative URIs.
+        contains relative URIs. A default language can be provided for the
+        'title' parameter.
 
         The structure returned by this function should not be considered
         stable.
@@ -100,7 +101,7 @@ BUGS
     Please report any bugs to <http://rt.cpan.org/>.
 
 SEE ALSO
-    <http://www.mnot.net/drafts/draft-nottingham-http-link-header-07.txt>
+    <http://www.mnot.net/drafts/draft-nottingham-http-link-header-10.txt>
 
     RDF::Trine, RDF::TrineShortcuts, HTTP::Response.
 

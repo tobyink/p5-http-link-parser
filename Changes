@@ -10,12 +10,16 @@ Home page:    <http://search.cpan.org/dist/HTTP-Link-Parser/>
 Bug tracker:  <http://rt.cpan.org/Dist/Display.html?Queue=HTTP-Link-Parser>
 Maintainer:   Toby Inkster <mailto:tobyink@cpan.org>
 
+0.100 [2010-06-26]
+ - (Update) Let the Content-Language header provide a default language for
+   the 'title' property.
+
 0.05 [2010-02-07]
+ - (Update) Use my new build system.
+ - Rename parse_header to parse_single_link, and document this.
+ - Clean up @EXPORT and @EXPORT_OK.
  - (Update) Copyright 2010.
  - General documentation improvements.
- - (Update) Use my new build system.
- - Clean up @EXPORT and @EXPORT_OK.
- - Rename parse_header to parse_single_link, and document this.
 
 0.04 [2009-12-15]
  - (Addition) Support the 'title*' parameter.
