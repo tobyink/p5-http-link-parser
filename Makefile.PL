@@ -14,22 +14,21 @@ readme_from         $fn;
 author              'Toby Inkster <tobyink@cpan.org>';
 license             'mit';
 
-test_requires       'Test::More' => '0.61';
-
 requires            'Encode'             => 0;
-requires            'RDF::Trine'         => '0.112';
+requires            'RDF::Trine'         => '0.126';
 requires            'Scalar::Util'       => 0;
+test_requires       'Test::More'         => '0.61';
 requires            'URI'                => '1.30';
 requires            'URI::Escape'        => '3.00';
-
-# install_script 'fingerw';
 
 resources(
 	'homepage'   => "http://search.cpan.org/dist/$dist/",
 	'repository' => "http://goddamn.co.uk/viewvc/perlmods/$dist/",
 	'bugtracker' => "http://rt.cpan.org/Dist/Display.html?Queue=$dist",
 	);
-	
+
+keywords(qw(RFC5988 Link HTTP RDF Semantics Relationships Rel));
+
 write_doap_changes;
 write_doap_changes_xml;
 

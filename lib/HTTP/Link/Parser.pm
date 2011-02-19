@@ -46,25 +46,21 @@ our %EXPORT_TAGS = (
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT    = ( @{ $EXPORT_TAGS{'standard'} } );
 
-=head1 VERSION
-
-0.100
-
-=cut
-
-our $VERSION = '0.100';
+our $VERSION = '0.101';
 
 use Encode qw(decode encode_utf8);
-use RDF::Trine 0.112;
+use RDF::Trine '0.126';
 use Scalar::Util qw(blessed);
 use URI;
 use URI::Escape;
+
+use constant LINK_NAMESPACE => 'http://www.iana.org/assignments/relation/';
 
 =head1 DESCRIPTION
 
 HTTP::Link::Parser parses HTTP "Link" headers found in an
 HTTP::Response object. Headers should conform to the format
-described in the forthcoming IETF specification.
+described in RFC 5988.
 
 =head2 Functions
 
@@ -74,7 +70,7 @@ To export all functions:
 
 =over 4
 
-=item C<< $model = parse_links_into_model($response, [$existing_model]) >>
+=item C<< parse_links_into_model($response, [$existing_model]) >>
 
 Takes an L<HTTP::Response> object (or in fact, any L<HTTP::Message> object)
 and returns an L<RDF::Trine::Model> containing link data extracted from the
@@ -88,21 +84,22 @@ new, empty model is created.
 
 sub parse_links_into_model
 {
-	my $response =  shift;
-	my $model    =  shift
-	             || RDF::Trine::Model->new( RDF::Trine::Store::DBI->temporary_store );
+	my ($response, $model) = @_;
+	
+	die "Parameter to parse_links_to_list should be an HTTP::Message.\n"
+		unless blessed($response) && $response->isa('HTTP::Message');
+		
+	my $model ||= RDF::Trine::Model->temporary_model;
 	$model->add_hashref(parse_links_to_rdfjson($response));
 	return $model;
 }
 
-=item C<< $data = parse_links_to_rdfjson($response) >>
+=item C<< parse_links_to_rdfjson($response) >>
 
-C<$data> is a hashref with a structure inspired by the RDF/JSON
+Returns a hashref with a structure inspired by the RDF/JSON
 specification. This can be thought of as a shortcut for:
 
-  use RDF::Trine 0.112;
-  $model = parse_links_into_model($response);
-  $data  = $model->as_hashref;
+  parse_links_into_model($response)->as_hashref
 
 But it's faster as no intermediate model is built.
 
@@ -110,10 +107,14 @@ But it's faster as no intermediate model is built.
 
 sub parse_links_to_rdfjson
 {
-	my $response = shift;
-	my $base     = URI->new($response->base);
-	my $links    = parse_links_to_list($response);
-	my $rv       = {};
+	my ($response) = @_;
+	
+	die "Parameter to parse_links_to_list should be an HTTP::Message.\n"
+		unless blessed($response) && $response->isa('HTTP::Message');
+		
+	my $base  = URI->new($response->base);
+	my $links = parse_links_to_list($response);
+	my $rv    = {};
 	
 	foreach my $link (@$links)
 	{
@@ -205,11 +206,47 @@ sub parse_links_to_rdfjson
 	return $rv;
 }
 
-=item C<< $list = parse_links_to_list($response) >>
+=item C<< relationship_uri($short) >>
 
 This function is not exported by default. 
 
-C<$list> is an arrayref of hashrefs. Each hashref contains keys
+It may be used to convert short strings identifying relationships,
+such as "next" and "prev", into longer URIs identifying the same
+relationships, such as "http://www.iana.org/assignments/relation/next"
+and "http://www.iana.org/assignments/relation/prev".
+
+If passed a string which is a URI already, simply returns it as-is.
+
+=cut
+
+sub relationship_uri
+{
+	my ($str) = @_;
+
+	if ($str =~ /^([a-z][a-z0-9\+\.\-]*)\:/i)
+	{
+		# seems to be an absolute URI, so can safely return "as is".
+		return $str;
+	}
+
+	return sprintf('%s%s', LINK_NAMESPACE, lc $str);
+}
+
+
+=back
+
+=head2 Internal Functions
+
+These are really just internal implementations, but you can use them if you
+like.
+
+=over
+
+=item C<< parse_links_to_list($response) >>
+
+This function is not exported by default. 
+
+Returns an arrayref of hashrefs. Each hashref contains keys
 corresponding to the link parameters of the link, and a key called
 'URI' corresponding to the target of the link.
 
@@ -226,9 +263,13 @@ stable.
 
 sub parse_links_to_list
 {
-	my $response = shift;
-	my $rv       = [];
-	my $base     = URI->new( $response->base );
+	my ($response) = @_;
+	
+	die "Parameter to parse_links_to_list should be an HTTP::Message.\n"
+		unless blessed($response) && $response->isa('HTTP::Message');
+	
+	my $rv   = [];
+	my $base = URI->new($response->base);
 	
 	my $clang;
 	if ($response->header('Content-Language') =~ /^\s*([^,\s]+)/)
@@ -244,7 +285,7 @@ sub parse_links_to_list
 	return $rv;
 }
 
-=item C<< $data = parse_single_link($link, $base, [$default_lang]) >>
+=item C<< parse_single_link($link, $base, [$default_lang]) >>
 
 This function is not exported by default. 
 
@@ -252,8 +293,7 @@ This parses a single Link header (minus the "Link:" bit itself) into a hashref
 structure. A base URI must be included in case the link contains relative URIs.
 A default language can be provided for the 'title' parameter.
 
-The structure returned by this function should not be considered
-stable.
+The structure returned by this function should not be considered stable.
 
 =cut
 
@@ -341,37 +381,6 @@ sub parse_single_link
 	return $rv;
 }
 
-=item C<< $long = relationship_uri($short) >>
-
-This function is not exported by default. 
-
-It may be used to convert short strings identifying relationships,
-such as "next" and "prev", into longer URIs identifying the same
-relationships, such as "http://www.iana.org/assignments/relation/next"
-and "http://www.iana.org/assignments/relation/prev".
-
-If passed a string which is a URI already, simply returns it as-is.
-
-=cut
-
-sub relationship_uri
-{
-	my $str = shift;
-
-	if ($str =~ /^([a-z][a-z0-9\+\.\-]*)\:/i)
-	{
-		# seems to be an absolute URI, so can safely return "as is".
-		return $str;
-	}
-
-	return 'http://www.iana.org/assignments/relation/' . (lc $str);
-
-	my $url = url (lc $str), 'http://www.iana.org/assignments/relation/';
-	return $url->abs->as_string;
-
-	return undef;
-}
-
 1;
 
 package HTTP::Link::Parser::PlainLiteral;
@@ -384,6 +393,7 @@ sub value { $_[0]->[0]; }
 sub lang { length $_[0]->[2] ? $_[0]->[2] : undef; }
 
 1;
+
 __END__
 
 =back
@@ -394,7 +404,7 @@ Please report any bugs to L<http://rt.cpan.org/>.
 
 =head1 SEE ALSO
 
-L<http://www.mnot.net/drafts/draft-nottingham-http-link-header-10.txt>
+L<http://www.ietf.org/rfc/rfc5988.txt>
 
 L<RDF::Trine>, L<RDF::TrineShortcuts>, L<HTTP::Response>.
 
@@ -408,7 +418,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-Copyright (C) 2009-2010 by Toby Inkster
+Copyright (C) 2009-2011 by Toby Inkster
 
 =head2 a.k.a. "The MIT Licence"
 
@@ -431,3 +441,4 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 =cut
+

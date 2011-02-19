@@ -91,6 +91,18 @@ my:v_0-100
 			[ rdfs:label "Let the Content-Language header provide a default language for the 'title' property."@en ; a dcs:Update ]
 		] .
 
+my:v_0-101
+
+	a               :Version ;
+	dc:issued       "2011-02-19"^^xsd:date ;
+	:revision       "0.101"^^xsd:string ;
+	:file-release   <http://backpan.cpan.org/authors/id/T/TO/TOBYINK/HTTP-Link-Parser-0.101.tar.gz> ;
+	dcs:changeset [
+		dcs:versus my:v_0-100 ;
+		dcs:item   [ rdfs:label "Minor cleanups."@en ] ;
+		dcs:item   [ rdfs:label "Copyright 2011."@en ; a dcs:Update ]
+		] .
+
 #############################################################
 
 my:project
@@ -110,7 +122,7 @@ my:project
 	:created        "2009-10-09"^^xsd:date ;
 	:license        <http://www.opensource.org/licenses/mit-license.php> ;
 	:release        my:v_0-01 , my:v_0-02 , my:v_0-03 , my:v_0-04 , my:v_0-05 ,
-	                my:v_0-100 .
+	                my:v_0-100 , my:v_0-101 .
 
 #############################################################
 
