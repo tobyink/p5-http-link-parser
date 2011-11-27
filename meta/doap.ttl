@@ -1,0 +1,40 @@
+@prefix :        <http://usefulinc.com/ns/doap#> .
+@prefix dcs:     <http://ontologi.es/doap-changeset#> .
+@prefix dc:      <http://purl.org/dc/terms/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix my:      <http://purl.org/NET/cpan-uri/dist/HTTP-Link-Parser/> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix toby:    <http://tobyinkster.co.uk/#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+my:project
+	a               :Project ;
+	:name           "HTTP-Link-Parser" ;
+	:shortdesc      "parse HTTP Link headers"@en ;
+	:programming-language  "Perl" ;
+	:homepage       <https://metacpan.org/release/HTTP-Link-Parser> ;
+	:download-page  <https://metacpan.org/release/HTTP-Link-Parser> ;
+	:bug-database   <http://rt.cpan.org/Dist/Display.html?Queue=HTTP-Link-Parser> ;
+	:repository     [ a :HgRepository ; :browse <https://bitbucket.org/tobyink/p5-http-link-parser> ] ;
+	:maintainer     toby:i ;
+	:developer      toby:i ;
+	:documenter     toby:i ;
+	:tester         toby:i ;
+	:created        "2009-10-09"^^xsd:date ;
+	:license        <http://www.opensource.org/licenses/mit-license.php> ;
+	:category
+		[ rdfs:label "RFC5988" ] ,
+		[ rdfs:label "HTTP" ] ,
+		[ rdfs:label "Link" ] ,
+		[ rdfs:label "RDF" ] ,
+		[ rdfs:label "Semantics" ] ,
+		[ rdfs:label "Relationships" ] ,
+		[ rdfs:label "rel" ] .
+
+toby:i
+	a               foaf:Person ;
+	foaf:name       "Toby Inkster" ;
+	foaf:homepage   <http://tobyinkster.co.uk/> ;
+	foaf:page       <https://metacpan.org/author/TOBYINK> ;
+	foaf:mbox       <mailto:tobyink@cpan.org> ;
+	<http://www.w3.org/2002/07/owl#sameAs> <http://purl.org/NET/cpan-uri/person/tobyink> .

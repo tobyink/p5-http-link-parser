@@ -1,0 +1,21 @@
+# This file provides instructions for packaging.
+
+@prefix : <http://purl.org/NET/cpan-uri/terms#> .
+
+<http://purl.org/NET/cpan-uri/dist/HTTP-Link-Parser/project>
+	:perl_version_from _:main ;
+	:version_from _:main ;
+	:readme_from _:main ;
+	:test_requires "Test::More 0.61" ;
+	:requires
+		"Exporter",
+		"Carp",
+		"Encode",
+		"HTTP::Message",
+		"RDF::Trine 0.135",
+		"Scalar::Util",
+		"URI",
+		"URI::Escape".
+
+_:main <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#fileName> "lib/HTTP/Link/Parser.pm" .
+
