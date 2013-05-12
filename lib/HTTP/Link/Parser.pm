@@ -8,7 +8,7 @@ our (@ISA, %EXPORT_TAGS, @EXPORT_OK, @EXPORT);
 BEGIN
 {
 	$HTTP::Link::Parser::AUTHORITY = 'cpan:TOBYINK';
-	$HTTP::Link::Parser::VERSION   = '0.102';
+	$HTTP::Link::Parser::VERSION   = '0.103';
 	
 	require Exporter;
 	@ISA = qw(Exporter);
