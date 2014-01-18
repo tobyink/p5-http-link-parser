@@ -8,5 +8,5 @@
 	:runtime-requirement    [ :on "HTTP::Message"^^:CpanId ] ;
 	:runtime-requirement    [ :on "URI"^^:CpanId ] ;
 	:runtime-requirement    [ :on "URI::Escape"^^:CpanId ] ;
-	:test-recommendation    [ :on "Test::More 0.61"^^:CpanId ] ;
+	:test-recommendation    [ :on "RDF::Trine 0.135"^^:CpanId ] ;
 	:runtime-suggestion     [ :on "RDF::Trine 0.135"^^:CpanId ] .

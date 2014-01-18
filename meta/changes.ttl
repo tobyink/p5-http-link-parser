@@ -21,10 +21,11 @@ my:v_0-02
 	dc:issued       "2009-11-24"^^xsd:date ;
 	:revision       "0.02"^^xsd:string ;
 	:file-release   <http://backpan.cpan.org/authors/id/T/TO/TOBYINK/HTTP-Link-Parser-0.02.tar.gz> ;
-	dcs:changeset [
-		dcs:versus my:v_0-01 ;
-		rdfs:comment "Bugfixes" 
-	] .
+#	dcs:changeset [
+#		dcs:versus my:v_0-01 ;
+#		rdfs:comment "Bugfixes" 
+#	] .
+	.
 
 my:project :release my:v_0-03 .
 my:v_0-03
