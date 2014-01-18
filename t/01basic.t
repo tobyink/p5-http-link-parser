@@ -4,7 +4,7 @@
 
 =head1 PURPOSE
 
-Check HTTP Link headers can be parsed into RDF models.
+Check HTTP Link headers can be parsed.
 
 =head1 AUTHOR
 
@@ -12,7 +12,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-Copyright (C) 2009-2011, 2014 by Toby Inkster
+Copyright (C) 2014 by Toby Inkster
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,7 @@ THE SOFTWARE.
 
 use strict;
 use warnings;
-use Test::More tests => 11;
+use Test::More tests => 1;
 
 use HTTP::Link::Parser ();
 
@@ -51,103 +51,68 @@ $response->push_header("Link" => "<subject>; rel=\"prev\"; title=\"subject\"; an
 $response->push_header("Link" => "<author>; rev=\"made\"; title=\"author\";");
 $response->push_header("Link" => "<german-page>; rev=\"test\"; title=\"nachstes Kapitel\"; title*=UTF-8'de'n%c3%a4chstes%20Kapitel");
 
-my $M = HTTP::Link::Parser::parse_links_into_model($response);
+my @data = sort {
+	$a->{URI} cmp $b->{URI}
+} @{ HTTP::Link::Parser::parse_links_to_list($response) };
 
-ok(
-	$M->count_statements(
-		RDF::Trine::Node::Resource->new('http://example.org/subject'),
-		RDF::Trine::Node::Resource->new('http://example.net/rel/one'),
-		RDF::Trine::Node::Resource->new('http://example.net/absolute'),
-	),
-	"absolute relationships",
-);
+is_deeply(
+	\@data,
+	[
+		{
+			'URI' => bless( do{\(my $o = 'http://example.net/absolute')}, 'URI::http' ),
+			'rel' => [
+				'http://example.net/rel/one',
+				'http://example.net/rel/two'
+			],
+			'title' => 'absolute'
+		},
+		{
+			'URI' => bless( do{\(my $o = 'http://example.org/author')}, 'URI::http' ),
+			'rev' => [
+				'made'
+			],
+			'title' => 'author'
+		},
+		{
+			'URI' => bless( do{\(my $o = 'http://example.org/german-page')}, 'URI::http' ),
+			'rev' => [
+				'test'
+			],
+			'title' => 'nachstes Kapitel',
+			'title*' => [
+				bless( [
+					"n\x{e4}chstes Kapitel",
+					undef,
+					'de'
+				], 'HTTP::Link::Parser::PlainLiteral' )
+			]
+		},
+		{
+			'URI' => bless( do{\(my $o = 'http://example.org/nextdoc')}, 'URI::http' ),
+			'hreflang' => [
+				'en'
+			],
+			'rel' => [
+				'next'
+			],
+			'title' => 'relative',
+			'type' => 'TEXT/HTML'
+		},
+		{
+			'URI' => bless( do{\(my $o = 'http://example.org/relative')}, 'URI::http' ),
+			'rel' => [
+				'three'
+			],
+			'title' => 'relative'
+		},
+		{
+			'URI' => bless( do{\(my $o = 'http://example.org/subject')}, 'URI::http' ),
+			'anchor' => bless( do{\(my $o = 'http://example.org/nextdoc')}, 'URI::http' ),
+			'rel' => [
+				'prev'
+			],
+			'title' => 'subject'
+		},
+	],
+) or diag explain(\@data);
 
-ok(
-	$M->count_statements(
-		RDF::Trine::Node::Resource->new('http://example.org/subject'),
-		RDF::Trine::Node::Resource->new('http://www.iana.org/assignments/relation/three'),
-		RDF::Trine::Node::Resource->new('http://example.org/relative'),
-	),
-	"relative relationships",
-);
-
-ok(
-	$M->count_statements(
-		RDF::Trine::Node::Resource->new('http://example.org/subject'),
-		RDF::Trine::Node::Resource->new('http://example.net/rel/two'),
-		RDF::Trine::Node::Resource->new('http://example.net/absolute'),
-	),
-	"space-separated relationships",
-);
-
-ok(
-	$M->count_statements(
-		RDF::Trine::Node::Resource->new('http://example.org/nextdoc'),
-		RDF::Trine::Node::Resource->new('http://www.iana.org/assignments/relation/prev'),
-		RDF::Trine::Node::Resource->new('http://example.org/subject'),
-	),
-	"the 'anchor' link parameter",
-);
-
-ok(
-	$M->count_statements(
-		RDF::Trine::Node::Resource->new('http://example.org/author'),
-		RDF::Trine::Node::Resource->new('http://www.iana.org/assignments/relation/made'),
-		RDF::Trine::Node::Resource->new('http://example.org/subject'),
-	),
-	"the 'rev' link parameter",
-);
-
-ok(
-	$M->count_statements(
-		RDF::Trine::Node::Resource->new('http://example.org/author'),
-		RDF::Trine::Node::Resource->new('http://purl.org/dc/terms/title'),
-		RDF::Trine::Node::Literal->new('author'),
-	),
-	"the 'title' link parameter",
-);
-
-ok(
-	$M->count_statements(
-		RDF::Trine::Node::Resource->new('http://example.org/subject'),
-		RDF::Trine::Node::Resource->new('http://purl.org/dc/terms/title'),
-		RDF::Trine::Node::Literal->new('subject'),
-	),
-	"the 'title' link parameter, with 'anchor'",
-);
-
-ok(
-	$M->count_statements(
-		RDF::Trine::Node::Resource->new('http://example.org/german-page'),
-		RDF::Trine::Node::Resource->new('http://purl.org/dc/terms/title'),
-		RDF::Trine::Node::Literal->new('nächstes Kapitel', 'de'),
-	),
-	"the 'title*' link parameter",
-);
-
-ok(
-	$M->count_statements(
-		RDF::Trine::Node::Resource->new('http://example.org/german-page'),
-		RDF::Trine::Node::Resource->new('http://purl.org/dc/terms/title'),
-		RDF::Trine::Node::Literal->new('nachstes Kapitel'),
-	),
-	"'title*' fallback",
-);
-
-ok(
-	$M->count_statements(
-		RDF::Trine::Node::Resource->new('http://example.org/nextdoc'),
-		RDF::Trine::Node::Resource->new('http://purl.org/dc/terms/language'),
-		RDF::Trine::Node::Resource->new('http://www.lingvoj.org/lingvo/en'),
-	),
-	"the 'hreflang' link parameter",
-);
-
-ok(
-	$M->count_statements(
-		RDF::Trine::Node::Resource->new('http://example.org/nextdoc'),
-		RDF::Trine::Node::Resource->new('http://purl.org/dc/terms/format'),
-		RDF::Trine::Node::Resource->new('http://www.iana.org/assignments/media-types/text/html'),
-	),
-	"the 'type' link parameter",
-);

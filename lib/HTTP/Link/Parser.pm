@@ -21,12 +21,13 @@ BEGIN
 
 use Carp qw(croak carp);
 use Encode qw(decode encode_utf8);
-use RDF::Trine '0.135';
 use Scalar::Util qw(blessed);
 use URI;
 use URI::Escape;
 
-use constant LINK_NAMESPACE => 'http://www.iana.org/assignments/relation/';
+use constant (
+	LINK_NAMESPACE => 'http://www.iana.org/assignments/relation/',
+);
 
 sub parse_links_into_model
 {
@@ -34,7 +35,9 @@ sub parse_links_into_model
 	
 	croak "Parameter to parse_links_into_model should be an HTTP::Message"
 		unless blessed($response) && $response->isa('HTTP::Message');
-		
+	
+	require RDF::Trine;
+	
 	my $model ||= RDF::Trine::Model->temporary_model;
 	$model->add_hashref(parse_links_to_rdfjson($response));
 	return $model;
