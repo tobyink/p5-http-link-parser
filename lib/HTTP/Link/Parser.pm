@@ -279,6 +279,10 @@ sub parse_single_link
 
 __END__
 
+=pod
+
+=encoding utf-8
+
 =head1 NAME
 
 HTTP::Link::Parser - parse HTTP Link headers
@@ -415,9 +419,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-Copyright (C) 2009-2011 by Toby Inkster
-
-=head2 a.k.a. "The MIT Licence"
+Copyright (C) 2009-2011, 2014 by Toby Inkster
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
