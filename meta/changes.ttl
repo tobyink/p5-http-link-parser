@@ -24,7 +24,7 @@ my:v_0-02
 	dcs:changeset [
 		dcs:versus my:v_0-01 ;
 		rdfs:comment "Bugfixes" 
-		] .
+	] .
 
 my:project :release my:v_0-03 .
 my:v_0-03
@@ -36,7 +36,7 @@ my:v_0-03
 		dcs:versus my:v_0-02 ;
 		dcs:item
 			[ rdfs:label "Provide an RDF::Trine::Model"@en ; a dcs:Addition ] 
-		] .
+	] .
 
 my:project :release my:v_0-04 .
 my:v_0-04
@@ -48,7 +48,7 @@ my:v_0-04
 		dcs:versus my:v_0-03 ;
 		dcs:item
 			[ rdfs:label "Support the 'title*' parameter."@en ; a dcs:Addition ] 
-		] .
+	] .
 
 my:project :release my:v_0-05 .
 my:v_0-05
@@ -64,7 +64,7 @@ my:v_0-05
 			[ rdfs:label "Copyright 2010."@en ; a dcs:Update ] ,
 			[ rdfs:label "Use my new build system."@en ; a dcs:Update ] ,
 			[ rdfs:label "General documentation improvements."@en ] 
-		] .
+	] .
 
 my:project :release my:v_0-100 .
 my:v_0-100
@@ -76,7 +76,7 @@ my:v_0-100
 		dcs:versus my:v_0-05 ;
 		dcs:item
 			[ rdfs:label "Let the Content-Language header provide a default language for the 'title' property."@en ; a dcs:Update ]
-		] .
+	] .
 
 my:project :release my:v_0-101 .
 my:v_0-101
@@ -88,7 +88,7 @@ my:v_0-101
 		dcs:versus my:v_0-100 ;
 		dcs:item   [ rdfs:label "Minor cleanups."@en ] ;
 		dcs:item   [ rdfs:label "Copyright 2011."@en ; a dcs:Update ]
-		] .
+	] .
 
 my:project :release my:v_0-102 .
 my:v_0-102
@@ -101,7 +101,7 @@ my:v_0-102
 		dcs:item   [ rdfs:label "use 5.010"@en ; a dcs:Update ] ;
 		dcs:item   [ rdfs:label "Minor tidy"@en ] ;
 		dcs:item   [ rdfs:label "Module::Package::RDF"@en ; a dcs:Packaging ] 
-		] .
+	] .
 
 my:project :release my:v_0-103 .
 my:v_0-103
@@ -112,4 +112,17 @@ my:v_0-103
 	dcs:changeset [
 		dcs:versus my:v_0-102 ;
 		dcs:item   [ rdfs:label "Newer version of Module::Package::RDF."@en ; a dcs:Packaging, dcs:Bugfix ] 
-		] .
+	] .
+
+my:project :release my:v_0-200 .
+my:v_0-200
+	a               :Version ;
+	dc:issued       "2014-01-18"^^xsd:date ;
+	:revision       "0.200"^^xsd:string ;
+	:file-release   <http://backpan.cpan.org/authors/id/T/TO/TOBYINK/HTTP-Link-Parser-0.200.tar.gz> ;
+	dcs:changeset [
+		dcs:versus my:v_0-103 ;
+		dcs:item   [ rdfs:label "use Dist::Inkt."@en ; a dcs:Packaging, dcs:Update ] ;
+		dcs:item   [ rdfs:label "Make RDF::Trine dependency optional."@en ; a dcs:Change ] ;
+		dcs:item   [ rdfs:label "Copyright 2014."@en ; a dcs:Update, dcs:Documentation ] ;
+	] .

@@ -7,7 +7,7 @@ no warnings;
 BEGIN
 {
 	$HTTP::Link::Parser::AUTHORITY = 'cpan:TOBYINK';
-	$HTTP::Link::Parser::VERSION   = '0.103';
+	$HTTP::Link::Parser::VERSION   = '0.200';
 	
 	require Exporter;
 	our @ISA = qw(Exporter);
