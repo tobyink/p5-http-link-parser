@@ -262,8 +262,6 @@ sub parse_single_link
 	return $rv;
 }
 
-1;
-
 {
 	package HTTP::Link::Parser::PlainLiteral;
 	
@@ -282,6 +280,8 @@ __END__
 =pod
 
 =encoding utf-8
+
+=for stopwords hreflang prev rel
 
 =head1 NAME
 
