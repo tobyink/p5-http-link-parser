@@ -265,14 +265,16 @@ sub parse_single_link
 
 1;
 
-package HTTP::Link::Parser::PlainLiteral;
+{
+	package HTTP::Link::Parser::PlainLiteral;
 
-use overload
-	'""' => sub { $_[0]->[0] },
-	'eq' => sub { $_[0]->[0] eq $_[1]->[0] and lc $_[0]->[2] eq lc $_[1]->[2] };
+	use overload
+		'""' => sub { $_[0]->[0] },
+		'eq' => sub { $_[0]->[0] eq $_[1]->[0] and lc $_[0]->[2] eq lc $_[1]->[2] };
 
-sub value { $_[0]->[0]; }
-sub lang { length $_[0]->[2] ? $_[0]->[2] : undef; }
+	sub value { $_[0]->[0]; }
+	sub lang { length $_[0]->[2] ? $_[0]->[2] : undef; }
+}
 
 1;
 
